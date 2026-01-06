@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user is a participant in a bucket
+    function isParticipant(bucketId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/buckets/$(bucketId)) &&
+        get(/databases/$(database)/documents/buckets/$(bucketId)).data.participants[request.auth.uid] != null;
+    }
+
+    // Buckets collection
+    match /buckets/{bucketId} {
+      // Users can read buckets they are participants in
+      allow read: if isAuthenticated() &&
+        resource.data.participants[request.auth.uid] != null;
+
+      // Users can create buckets (they will be added as first participant)
+      allow create: if isAuthenticated() &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.participants[request.auth.uid] != null;
+
+      // Users can update buckets they are participants in
+      // This allows adding/removing participants and updating bucket details
+      allow update: if isAuthenticated() &&
+        resource.data.participants[request.auth.uid] != null;
+
+      // Users can delete buckets they created
+      allow delete: if isAuthenticated() &&
+        resource.data.createdBy == request.auth.uid;
+    }
+
+    // Expenses collection
+    match /expenses/{expenseId} {
+      // Users can read expenses in buckets they participate in
+      allow read: if isParticipant(resource.data.bucketId);
+
+      // Users can create expenses in buckets they participate in
+      allow create: if isAuthenticated() &&
+        isParticipant(request.resource.data.bucketId) &&
+        request.resource.data.createdBy == request.auth.uid;
+
+      // Users can update expenses they created or in buckets they participate in
+      allow update: if isAuthenticated() &&
+        isParticipant(resource.data.bucketId);
+
+      // Users can delete expenses they created or in buckets they participate in
+      allow delete: if isAuthenticated() &&
+        isParticipant(resource.data.bucketId);
+    }
+
+    // Credits collection
+    match /credits/{creditId} {
+      // Users can read credits in buckets they participate in
+      allow read: if isParticipant(resource.data.bucketId);
+
+      // Users can create credits in buckets they participate in
+      allow create: if isAuthenticated() &&
+        isParticipant(request.resource.data.bucketId) &&
+        request.resource.data.createdBy == request.auth.uid;
+
+      // Users can update credits they created or in buckets they participate in
+      allow update: if isAuthenticated() &&
+        isParticipant(resource.data.bucketId);
+
+      // Users can delete credits they created or in buckets they participate in
+      allow delete: if isAuthenticated() &&
+        isParticipant(resource.data.bucketId);
+    }
+  }
+}
