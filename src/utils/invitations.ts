@@ -222,12 +222,12 @@ export function generateInvitationEmailLink(
   bucketName: string,
   invitationLink: string
 ): string {
-  const subject = encodeURIComponent(`You've been invited to join "${bucketName}" on SplitThis`);
+  const subject = encodeURIComponent(`You've been added to the expenses bucket "${bucketName}"`);
   const body = encodeURIComponent(
-    `Hi!\n\n${inviterName} has invited you to join the expense bucket "${bucketName}" on SplitThis.\n\n` +
-    `Click the link below to accept the invitation:\n${invitationLink}\n\n` +
-    `SplitThis makes it easy to split expenses and track who owes what.\n\n` +
-    `If you don't have an account yet, you'll be able to create one when you accept the invitation.\n\n` +
+    `You've been added to the expenses bucket "${bucketName}". Access the bucket at ${invitationLink}\n\n` +
+    `${inviterName} added you to this bucket on SplitThis.\n\n` +
+    `Click the link above to view the bucket and start tracking expenses together.\n\n` +
+    `If you don't have an account yet, you'll be able to create one when you access the bucket.\n\n` +
     `Best regards,\nThe SplitThis Team`
   );
 
