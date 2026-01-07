@@ -71,5 +71,33 @@ service cloud.firestore {
       allow delete: if isAuthenticated() &&
         isParticipant(resource.data.bucketId);
     }
+
+    // Invitations collection
+    match /invitations/{invitationId} {
+      // Anyone can read invitations by token (for accepting invites)
+      // Participants in the bucket can also read all invitations for that bucket
+      allow read: if isAuthenticated() &&
+        (isParticipant(resource.data.bucketId) ||
+         request.auth.token.email == resource.data.email);
+
+      // Only participants in the bucket can create invitations
+      allow create: if isAuthenticated() &&
+        isParticipant(request.resource.data.bucketId) &&
+        request.resource.data.invitedBy == request.auth.uid &&
+        request.resource.data.status == 'pending';
+
+      // Only the person who created the invitation can update it
+      // Or the invited person can update it to 'accepted' status
+      allow update: if isAuthenticated() &&
+        ((resource.data.invitedBy == request.auth.uid) ||
+         (request.auth.token.email == resource.data.email &&
+          request.resource.data.status == 'accepted' &&
+          resource.data.status == 'pending'));
+
+      // Only the inviter or bucket participants can delete invitations
+      allow delete: if isAuthenticated() &&
+        (resource.data.invitedBy == request.auth.uid ||
+         isParticipant(resource.data.bucketId));
+    }
   }
 }
