@@ -76,7 +76,7 @@ export default function CreditForm({ bucket, credit, onClose, onSave }: Props) {
         amount: parseFloat(amount),
         receivedBy,
         split,
-        notes: notes.trim() || undefined,
+        notes: notes.trim(),
       });
     } catch (err) {
       console.error('Failed to save credit:', err);
@@ -149,21 +149,19 @@ export default function CreditForm({ bucket, credit, onClose, onSave }: Props) {
             <div className="flex gap-3">
               <button
                 onClick={() => setSplitType('even')}
-                className={`flex-1 py-2 px-4 rounded-lg border transition-colors ${
-                  splitType === 'even'
+                className={`flex-1 py-2 px-4 rounded-lg border transition-colors ${splitType === 'even'
                     ? 'bg-green-600 border-green-600 text-white'
                     : 'bg-dark-bg border-dark-border text-dark-text'
-                }`}
+                  }`}
               >
                 Split Evenly
               </button>
               <button
                 onClick={() => setSplitType('percentage')}
-                className={`flex-1 py-2 px-4 rounded-lg border transition-colors ${
-                  splitType === 'percentage'
+                className={`flex-1 py-2 px-4 rounded-lg border transition-colors ${splitType === 'percentage'
                     ? 'bg-green-600 border-green-600 text-white'
                     : 'bg-dark-bg border-dark-border text-dark-text'
-                }`}
+                  }`}
               >
                 Custom %
               </button>

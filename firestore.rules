@@ -11,7 +11,7 @@ service cloud.firestore {
     function isParticipant(bucketId) {
       return isAuthenticated() &&
         exists(/databases/$(database)/documents/buckets/$(bucketId)) &&
-        get(/databases/$(database)/documents/buckets/$(bucketId)).data.participants[request.auth.uid] != null;
+        request.auth.uid in get(/databases/$(database)/documents/buckets/$(bucketId)).data.participantIds;
     }
 
     // Buckets collection

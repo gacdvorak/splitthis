@@ -76,7 +76,7 @@ export default function ExpenseForm({ bucket, expense, onClose, onSave }: Props)
         amount: parseFloat(amount),
         paidBy,
         split,
-        notes: notes.trim() || undefined,
+        notes: notes.trim(),
       });
     } catch (err) {
       console.error('Failed to save expense:', err);
@@ -149,21 +149,19 @@ export default function ExpenseForm({ bucket, expense, onClose, onSave }: Props)
             <div className="flex gap-3">
               <button
                 onClick={() => setSplitType('even')}
-                className={`flex-1 py-2 px-4 rounded-lg border transition-colors ${
-                  splitType === 'even'
+                className={`flex-1 py-2 px-4 rounded-lg border transition-colors ${splitType === 'even'
                     ? 'bg-blue-600 border-blue-600 text-white'
                     : 'bg-dark-bg border-dark-border text-dark-text'
-                }`}
+                  }`}
               >
                 Split Evenly
               </button>
               <button
                 onClick={() => setSplitType('percentage')}
-                className={`flex-1 py-2 px-4 rounded-lg border transition-colors ${
-                  splitType === 'percentage'
+                className={`flex-1 py-2 px-4 rounded-lg border transition-colors ${splitType === 'percentage'
                     ? 'bg-blue-600 border-blue-600 text-white'
                     : 'bg-dark-bg border-dark-border text-dark-text'
-                }`}
+                  }`}
               >
                 Custom %
               </button>
