@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { useBuckets } from '../hooks/useBuckets';
 import { useExpenses } from '../hooks/useExpenses';
 import { useCredits } from '../hooks/useCredits';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateBucketSummary } from '../utils/settlements';
+import { getInvitationByEmail, acceptInvitation } from '../utils/invitations';
 import ExpenseForm from '../components/ExpenseForm';
 import CreditForm from '../components/CreditForm';
 import ParticipantManager from '../components/ParticipantManager';
@@ -23,13 +26,69 @@ export default function BucketDetail() {
   const [showCreditForm, setShowCreditForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState<any>(null);
   const [editingCredit, setEditingCredit] = useState<any>(null);
+  const [checkingInvitation, setCheckingInvitation] = useState(true);
+  const [invitationError, setInvitationError] = useState<string>('');
 
   const bucket = buckets.find((b) => b.id === bucketId);
+
+  // Check for pending invitation and auto-accept when bucket is accessed
+  useEffect(() => {
+    async function checkAndAcceptInvitation() {
+      if (!bucketId || !currentUser?.email) {
+        setCheckingInvitation(false);
+        return;
+      }
+
+      // If user is already a participant, no need to check
+      if (bucket) {
+        setCheckingInvitation(false);
+        return;
+      }
+
+      try {
+        // Check if there's a pending invitation for this user's email
+        const invitation = await getInvitationByEmail(bucketId, currentUser.email);
+
+        if (invitation) {
+          // Auto-accept the invitation
+          await acceptInvitation(
+            invitation.id,
+            currentUser.uid,
+            currentUser.email,
+            currentUser.displayName || undefined
+          );
+          // The bucket should now appear in the user's list via useBuckets hook
+        }
+      } catch (err: any) {
+        console.error('Error checking/accepting invitation:', err);
+        setInvitationError(err.message || 'Failed to access bucket');
+      } finally {
+        setCheckingInvitation(false);
+      }
+    }
+
+    checkAndAcceptInvitation();
+  }, [bucketId, currentUser, bucket]);
+
+  if (checkingInvitation) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-dark-muted">Loading bucket...</div>
+      </div>
+    );
+  }
 
   if (!bucket) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-dark-muted">Bucket not found</div>
+        <div className="text-center">
+          <div className="text-dark-muted mb-2">
+            {invitationError || 'Bucket not found'}
+          </div>
+          <Link to="/" className="text-blue-500 text-sm">
+            ← Back to Buckets
+          </Link>
+        </div>
       </div>
     );
   }

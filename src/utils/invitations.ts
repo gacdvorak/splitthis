@@ -81,6 +81,55 @@ export async function createInvitation(
 }
 
 /**
+ * Get invitation by email for a specific bucket
+ */
+export async function getInvitationByEmail(bucketId: string, email: string): Promise<{ id: string; data: Invitation } | null> {
+  const invitationsQuery = query(
+    collection(db, 'invitations'),
+    where('bucketId', '==', bucketId),
+    where('email', '==', email.toLowerCase()),
+    where('status', '==', 'pending')
+  );
+
+  const querySnapshot = await getDocs(invitationsQuery);
+
+  if (querySnapshot.empty) {
+    return null;
+  }
+
+  const invitationDoc = querySnapshot.docs[0];
+  const data = invitationDoc.data();
+
+  // Check if invitation has expired
+  const expiresAt = data.expiresAt?.toDate();
+  if (expiresAt && expiresAt < new Date()) {
+    // Mark as expired
+    await updateDoc(doc(db, 'invitations', invitationDoc.id), {
+      status: 'expired'
+    });
+    return null;
+  }
+
+  return {
+    id: invitationDoc.id,
+    data: {
+      id: invitationDoc.id,
+      bucketId: data.bucketId,
+      bucketName: data.bucketName,
+      email: data.email,
+      invitedBy: data.invitedBy,
+      invitedByEmail: data.invitedByEmail,
+      token: data.token,
+      status: data.status,
+      createdAt: data.createdAt?.toDate(),
+      expiresAt: data.expiresAt?.toDate(),
+      acceptedAt: data.acceptedAt?.toDate(),
+      acceptedByUid: data.acceptedByUid
+    }
+  };
+}
+
+/**
  * Get invitation by token
  */
 export async function getInvitationByToken(token: string): Promise<{ id: string; data: Invitation } | null> {
