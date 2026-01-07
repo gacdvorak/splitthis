@@ -15,23 +15,42 @@ When someone is added to a bucket, they will automatically receive an email with
    - Go to Firebase Console → Upgrade
    - Don't worry - the free tier is generous and you likely won't be charged for normal usage
 
-2. **Resend Account**: Free email sending service
-   - Sign up at https://resend.com
-   - Free tier: 100 emails/day, 3,000 emails/month
-   - No credit card required
+2. **Email Service** (choose one):
+   - **Gmail** (100% FREE - Recommended for getting started)
+   - **SendGrid** (FREE tier: 100 emails/day)
+   - **Any SMTP server** you already have
 
-## Step 1: Set Up Resend
+## Step 1: Set Up Email Service
 
-1. **Create a Resend account** at https://resend.com
+### Option A: Using Gmail (Free & Easy) ⭐ RECOMMENDED
 
-2. **Get your API key:**
-   - Go to API Keys in your Resend dashboard
-   - Click "Create API Key"
-   - Copy the key (starts with `re_`)
+1. **Create or use an existing Gmail account**
+   - Use your personal Gmail or create a new one for the app
 
-3. **Verify your domain (optional but recommended):**
-   - For production: Add and verify your domain in Resend
-   - For development/testing: You can use Resend's test domain
+2. **Enable 2-Step Verification:**
+   - Go to https://myaccount.google.com/security
+   - Enable 2-Step Verification (required for App Passwords)
+
+3. **Create an App Password:**
+   - Go to https://myaccount.google.com/apppasswords
+   - Select app: "Mail"
+   - Select device: "Other" → Enter "SplitThis"
+   - Click "Generate"
+   - **Copy the 16-character password** (you'll use this as `SMTP_PASS`)
+
+### Option B: Using SendGrid (Free Tier)
+
+1. **Create SendGrid account** at https://sendgrid.com
+2. **Create API key** in Settings → API Keys
+3. **Use these settings:**
+   - SMTP Host: `smtp.sendgrid.net`
+   - SMTP Port: `587`
+   - SMTP User: `apikey` (literally the word "apikey")
+   - SMTP Pass: Your SendGrid API key
+
+### Option C: Your Own SMTP Server
+
+If you have an existing email service, use its SMTP settings.
 
 ## Step 2: Install Functions Dependencies
 
@@ -42,18 +61,32 @@ npm install
 
 ## Step 3: Configure Environment Variables
 
-You need to set three environment variables in Firebase:
+### For Gmail:
 
 ```bash
-# Set your Resend API key
-firebase functions:config:set resend.api_key="re_your_actual_api_key_here"
+# Set SMTP settings
+firebase functions:config:set smtp.host="smtp.gmail.com"
+firebase functions:config:set smtp.port="587"
+firebase functions:config:set smtp.secure="false"
+firebase functions:config:set smtp.user="your-email@gmail.com"
+firebase functions:config:set smtp.pass="your-16-char-app-password"
 
-# Set the "from" email address
-# For testing, use: onboarding@resend.dev
-# For production, use your verified domain
-firebase functions:config:set email.from="SplitThis <noreply@yourdomain.com>"
+# Set the "from" email address (use your Gmail)
+firebase functions:config:set email.from="SplitThis <your-email@gmail.com>"
 
 # Set your app URL
+firebase functions:config:set app.url="https://your-app-url.web.app"
+```
+
+### For SendGrid:
+
+```bash
+firebase functions:config:set smtp.host="smtp.sendgrid.net"
+firebase functions:config:set smtp.port="587"
+firebase functions:config:set smtp.secure="false"
+firebase functions:config:set smtp.user="apikey"
+firebase functions:config:set smtp.pass="YOUR_SENDGRID_API_KEY"
+firebase functions:config:set email.from="SplitThis <your-verified-email@yourdomain.com>"
 firebase functions:config:set app.url="https://your-app-url.web.app"
 ```
 
@@ -62,22 +95,7 @@ firebase functions:config:set app.url="https://your-app-url.web.app"
 firebase functions:config:get
 ```
 
-## Step 4: Update Cloud Function to Use Config
-
-The cloud function needs to read from Firebase config instead of `process.env`. Update `functions/src/index.ts`:
-
-```typescript
-// Get config
-const config = functions.config();
-const resend = new Resend(config.resend.api_key);
-
-// In sendInvitationEmail function:
-const appUrl = config.app.url;
-// ...
-from: config.email.from,
-```
-
-## Step 5: Deploy Functions
+## Step 4: Deploy Functions
 
 ```bash
 # Build the functions
@@ -93,7 +111,7 @@ Or from the project root:
 firebase deploy --only functions
 ```
 
-## Step 6: Test the Email Flow
+## Step 5: Test the Email Flow
 
 1. **Create a test bucket** in your app
 2. **Add a participant** using the "Add Person" feature
@@ -115,20 +133,16 @@ For testing locally with Firebase emulators:
 
 2. **Edit `.env`** with your values:
    ```
-   RESEND_API_KEY=re_your_api_key
-   FROM_EMAIL=SplitThis <onboarding@resend.dev>
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_SECURE=false
+   SMTP_USER=your-email@gmail.com
+   SMTP_PASS=your-app-password
+   FROM_EMAIL=SplitThis <your-email@gmail.com>
    APP_URL=http://localhost:5173
    ```
 
-3. **Update `functions/src/index.ts`** to use `.env` in development:
-   ```typescript
-   import * as dotenv from 'dotenv';
-   if (process.env.FUNCTIONS_EMULATOR) {
-     dotenv.config();
-   }
-   ```
-
-4. **Start emulators:**
+3. **Start emulators:**
    ```bash
    firebase emulators:start
    ```
@@ -159,18 +173,25 @@ firebase functions:log --only sendInvitationEmail
    firebase functions:log
    ```
 
-2. **Verify Resend API key:**
+2. **Verify SMTP configuration:**
    ```bash
    firebase functions:config:get
    ```
 
-3. **Check Resend dashboard:**
-   - Go to https://resend.com/emails
-   - Look for failed sends and error messages
+3. **For Gmail:**
+   - Make sure 2-Step Verification is enabled
+   - Use App Password, not your regular password
+   - Check if "Less secure app access" is blocking you
+   - Verify FROM_EMAIL matches your SMTP_USER
 
-4. **Verify email address:**
-   - Make sure FROM_EMAIL domain is verified in Resend
-   - For testing, use `onboarding@resend.dev`
+4. **For SendGrid:**
+   - Verify your API key is correct
+   - Make sure sender email is verified in SendGrid
+   - Check SendGrid activity dashboard for errors
+
+5. **Test SMTP connection:**
+   - Try sending a test email from your local machine first
+   - Use the Firebase emulators to test before deploying
 
 ### Functions won't deploy?
 
@@ -189,22 +210,29 @@ firebase functions:log --only sendInvitationEmail
 
 ### Rate Limits
 
-Resend free tier limits:
-- 100 emails per day
-- 3,000 emails per month
+**Gmail:**
+- Free tier: ~500 emails/day
+- More than enough for typical usage
 
-If you exceed these, either:
-- Upgrade your Resend plan
-- Switch to a different email provider
+**SendGrid:**
+- Free tier: 100 emails/day
+- Upgrade if you need more
 
-## Alternative Email Providers
+If you exceed these limits, consider:
+- Upgrading your email service plan
+- Using a dedicated email service provider
+- Setting up your own SMTP server
 
-If you prefer a different email service, you can modify `functions/src/index.ts` to use:
+## Supported Email Providers
 
-- **SendGrid**: Popular choice with good free tier
-- **Mailgun**: Another reliable option
-- **Amazon SES**: Very cheap for high volume
-- **Postmark**: Great deliverability
+The current implementation uses Nodemailer and works with any SMTP provider:
+
+- **Gmail** ⭐ Recommended for personal projects
+- **SendGrid** - Good for higher volume
+- **Mailgun** - Another reliable option
+- **Amazon SES** - Very cheap for high volume
+- **Postmark** - Great deliverability
+- **Any SMTP server** - Just configure the settings
 
 ## Security Notes
 
@@ -221,11 +249,13 @@ If you prefer a different email service, you can modify `functions/src/index.ts`
 - First 400,000 GB-seconds/month: Free
 - First 200,000 CPU-seconds/month: Free
 
-**Resend (Free Tier):**
-- 100 emails/day: Free
-- 3,000 emails/month: Free
+**Email Service:**
+- **Gmail**: 100% FREE (up to ~500 emails/day)
+- **SendGrid**: FREE tier (100 emails/day)
 
 **For typical usage (< 100 invitations/day), costs will be $0/month.**
+
+This solution requires NO additional paid services!
 
 ## Support
 

@@ -1,6 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { Resend } from 'resend';
+import * as nodemailer from 'nodemailer';
 
 admin.initializeApp();
 
@@ -9,16 +9,29 @@ const getConfig = () => {
   const config = functions.config();
 
   return {
-    resendApiKey: config.resend?.api_key || process.env.RESEND_API_KEY,
+    smtpHost: config.smtp?.host || process.env.SMTP_HOST || 'smtp.gmail.com',
+    smtpPort: parseInt(config.smtp?.port || process.env.SMTP_PORT || '587'),
+    smtpSecure: (config.smtp?.secure || process.env.SMTP_SECURE) === 'true',
+    smtpUser: config.smtp?.user || process.env.SMTP_USER,
+    smtpPass: config.smtp?.pass || process.env.SMTP_PASS,
     fromEmail: config.email?.from || process.env.FROM_EMAIL || 'SplitThis <noreply@splitthis.app>',
     appUrl: config.app?.url || process.env.APP_URL || 'https://splitthis.app',
   };
 };
 
-// Initialize Resend
-const getResend = () => {
-  const { resendApiKey } = getConfig();
-  return new Resend(resendApiKey);
+// Create email transporter
+const createTransporter = () => {
+  const config = getConfig();
+
+  return nodemailer.createTransport({
+    host: config.smtpHost,
+    port: config.smtpPort,
+    secure: config.smtpSecure, // true for 465, false for other ports
+    auth: {
+      user: config.smtpUser,
+      pass: config.smtpPass,
+    },
+  });
 };
 
 interface Invitation {
@@ -44,7 +57,7 @@ export const sendInvitationEmail = functions.firestore
     try {
       const invitation = snap.data() as Invitation;
       const config = getConfig();
-      const resend = getResend();
+      const transporter = createTransporter();
 
       // Only send email for pending invitations
       if (invitation.status !== 'pending') {
@@ -113,8 +126,8 @@ If you don't have an account yet, you'll be able to create one when you accept t
 
 This invitation will expire in 7 days.`;
 
-      // Send email using Resend
-      const { data, error } = await resend.emails.send({
+      // Send email using Nodemailer
+      const info = await transporter.sendMail({
         from: config.fromEmail,
         to: invitation.email,
         subject: subject,
@@ -122,19 +135,14 @@ This invitation will expire in 7 days.`;
         text: textBody,
       });
 
-      if (error) {
-        console.error('Error sending email:', error);
-        throw new Error(`Failed to send email: ${error.message}`);
-      }
-
-      console.log('Email sent successfully:', data);
+      console.log('Email sent successfully:', info.messageId);
 
       // Update the invitation document with email sent status (optional)
       await snap.ref.update({
         emailSentAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      return { success: true, emailId: data?.id };
+      return { success: true, messageId: info.messageId };
     } catch (error) {
       console.error('Error in sendInvitationEmail function:', error);
       // Don't throw - we don't want to fail the invitation creation if email fails
