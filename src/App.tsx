@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Buckets from './pages/Buckets';
 import BucketDetail from './pages/BucketDetail';
+import AcceptInvitation from './pages/AcceptInvitation';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
@@ -19,6 +20,10 @@ function AppRoutes() {
         element={currentUser ? <Navigate to="/" /> : <Login />}
       />
       <Route
+        path="/invite/:token"
+        element={<AcceptInvitation />}
+      />
+      <Route
         path="/"
         element={
           <PrivateRoute>
@@ -28,6 +33,14 @@ function AppRoutes() {
       />
       <Route
         path="/bucket/:bucketId"
+        element={
+          <PrivateRoute>
+            <BucketDetail />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/buckets/:bucketId"
         element={
           <PrivateRoute>
             <BucketDetail />

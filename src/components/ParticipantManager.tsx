@@ -1,8 +1,13 @@
 import { useState } from 'react';
-import { doc, updateDoc, deleteField, serverTimestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, updateDoc, deleteField } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import type { Bucket, Participant } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  createInvitation,
+  generateInvitationLink,
+  generateInvitationEmailLink
+} from '../utils/invitations';
 
 interface Props {
   bucket: Bucket;
@@ -12,15 +17,20 @@ export default function ParticipantManager({ bucket }: Props) {
   const [email, setEmail] = useState('');
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
+  const [invitationLink, setInvitationLink] = useState('');
+  const [showInviteOptions, setShowInviteOptions] = useState(false);
+  const [copiedToClipboard, setCopiedToClipboard] = useState(false);
   const { currentUser } = useAuth();
 
   const participants = Object.values(bucket.participants);
 
   async function handleAddParticipant() {
-    if (!email.trim()) return;
+    if (!email.trim() || !currentUser) return;
 
     setError('');
     setAdding(true);
+    setShowInviteOptions(false);
+    setCopiedToClipboard(false);
 
     try {
       // Simple email validation
@@ -28,35 +38,63 @@ export default function ParticipantManager({ bucket }: Props) {
         throw new Error('Please enter a valid email address');
       }
 
+      const emailLower = email.trim().toLowerCase();
+
       // Check if already added
-      const exists = participants.some((p) => p.email === email.trim());
+      const exists = participants.some((p) => p.email.toLowerCase() === emailLower);
       if (exists) {
         throw new Error('This person is already in the bucket');
       }
 
-      // Create a temporary UID based on email (in real app, would look up actual user)
-      const tempUid = `temp_${email.trim().replace(/[^a-zA-Z0-9]/g, '_')}`;
+      // Create invitation
+      const { token } = await createInvitation(
+        bucket.id,
+        bucket.name,
+        emailLower,
+        currentUser.uid,
+        currentUser.email || ''
+      );
 
-      const newParticipant: any = {
-        uid: tempUid,
-        email: email.trim(),
-        addedAt: serverTimestamp(),
-      };
+      const link = generateInvitationLink(token);
+      setInvitationLink(link);
+      setShowInviteOptions(true);
 
-      await updateDoc(doc(db, 'buckets', bucket.id), {
-        [`participants.${tempUid}`]: newParticipant,
-        participantIds: arrayUnion(tempUid),
-      });
-
-      setEmail('');
-
-      // Show success message with instructions
-      alert(`${email.trim()} has been added to the bucket!\n\nNote: Email invites are not yet implemented. Please share this bucket link with them:\n${window.location.href}`);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setAdding(false);
     }
+  }
+
+  async function handleCopyLink() {
+    try {
+      await navigator.clipboard.writeText(invitationLink);
+      setCopiedToClipboard(true);
+      setTimeout(() => setCopiedToClipboard(false), 3000);
+    } catch (err) {
+      alert('Failed to copy to clipboard. Please copy manually:\n' + invitationLink);
+    }
+  }
+
+  function handleSendEmail() {
+    if (!currentUser) return;
+
+    const inviterName = currentUser.displayName || currentUser.email?.split('@')[0] || 'Someone';
+    const mailtoLink = generateInvitationEmailLink(
+      email.trim(),
+      inviterName,
+      bucket.name,
+      invitationLink
+    );
+
+    window.location.href = mailtoLink;
+  }
+
+  function handleDone() {
+    setEmail('');
+    setInvitationLink('');
+    setShowInviteOptions(false);
+    setCopiedToClipboard(false);
   }
 
   async function handleRemoveParticipant(uid: string) {
@@ -70,9 +108,11 @@ export default function ParticipantManager({ bucket }: Props) {
     }
 
     try {
-      const updates: any = {};
-      updates[`participants.${uid}`] = deleteField();
-      updates.participantIds = arrayRemove(uid);
+      const participantIds = bucket.participantIds || [];
+      const updates: any = {
+        [`participants.${uid}`]: deleteField(),
+        participantIds: participantIds.filter(id => id !== uid)
+      };
 
       await updateDoc(doc(db, 'buckets', bucket.id), updates);
     } catch (err) {
@@ -88,27 +128,87 @@ export default function ParticipantManager({ bucket }: Props) {
   return (
     <div>
       <div className="card mb-6">
-        <h3 className="font-semibold mb-4">Add Person</h3>
-        <div className="space-y-3">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleAddParticipant()}
-            className="input-field"
-            placeholder="Enter email address"
-          />
-          {error && (
-            <div className="text-sm text-red-400">{error}</div>
-          )}
-          <button
-            onClick={handleAddParticipant}
-            disabled={adding || !email.trim()}
-            className="btn-primary w-full"
-          >
-            {adding ? 'Adding...' : 'Add Person'}
-          </button>
-        </div>
+        <h3 className="font-semibold mb-4">Invite Person</h3>
+
+        {!showInviteOptions ? (
+          <div className="space-y-3">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddParticipant()}
+              className="input-field"
+              placeholder="Enter email address"
+            />
+            {error && (
+              <div className="text-sm text-red-400">{error}</div>
+            )}
+            <button
+              onClick={handleAddParticipant}
+              disabled={adding || !email.trim()}
+              className="btn-primary w-full"
+            >
+              {adding ? 'Creating Invitation...' : 'Send Invitation'}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="bg-dark-surface p-4 rounded-md border border-dark-border">
+              <p className="text-sm text-dark-muted mb-2">
+                Invitation created for: <span className="text-white font-medium">{email}</span>
+              </p>
+              <div className="mt-3 flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={invitationLink}
+                  readOnly
+                  className="input-field flex-1 text-sm font-mono"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={handleCopyLink}
+                className="btn-secondary flex items-center justify-center space-x-2"
+              >
+                {copiedToClipboard ? (
+                  <>
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span>Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span>Copy Link</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleSendEmail}
+                className="btn-primary flex items-center justify-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span>Send Email</span>
+              </button>
+            </div>
+
+            <button
+              onClick={handleDone}
+              className="w-full text-sm text-dark-muted hover:text-white transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="card">
