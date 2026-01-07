@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, deleteField, serverTimestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import type { Bucket, Participant } from '../types';
 import { useAuth } from '../contexts/AuthContext';
@@ -37,17 +37,21 @@ export default function ParticipantManager({ bucket }: Props) {
       // Create a temporary UID based on email (in real app, would look up actual user)
       const tempUid = `temp_${email.trim().replace(/[^a-zA-Z0-9]/g, '_')}`;
 
-      const newParticipant: Participant = {
+      const newParticipant: any = {
         uid: tempUid,
         email: email.trim(),
-        addedAt: new Date(),
+        addedAt: serverTimestamp(),
       };
 
       await updateDoc(doc(db, 'buckets', bucket.id), {
         [`participants.${tempUid}`]: newParticipant,
+        participantIds: arrayUnion(tempUid),
       });
 
       setEmail('');
+
+      // Show success message with instructions
+      alert(`${email.trim()} has been added to the bucket!\n\nNote: Email invites are not yet implemented. Please share this bucket link with them:\n${window.location.href}`);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -67,7 +71,8 @@ export default function ParticipantManager({ bucket }: Props) {
 
     try {
       const updates: any = {};
-      updates[`participants.${uid}`] = null;
+      updates[`participants.${uid}`] = deleteField();
+      updates.participantIds = arrayRemove(uid);
 
       await updateDoc(doc(db, 'buckets', bucket.id), updates);
     } catch (err) {

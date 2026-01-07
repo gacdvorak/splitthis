@@ -28,32 +28,39 @@ export function useBuckets() {
 
     const q = query(
       collection(db, 'buckets'),
-      where(`participants.${currentUser.uid}`, '!=', null)
+      where('participantIds', 'array-contains', currentUser.uid)
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const bucketsData: Bucket[] = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || new Date(),
-          participants: Object.entries(data.participants || {}).reduce(
-            (acc, [uid, participant]: [string, any]) => {
-              acc[uid] = {
-                ...participant,
-                addedAt: participant.addedAt?.toDate() || new Date(),
-              };
-              return acc;
-            },
-            {} as Record<string, Participant>
-          ),
-        } as Bucket;
-      });
-      setBuckets(bucketsData);
-      setLoading(false);
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const bucketsData: Bucket[] = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+            participants: Object.entries(data.participants || {}).reduce(
+              (acc, [uid, participant]: [string, any]) => {
+                acc[uid] = {
+                  ...participant,
+                  addedAt: participant.addedAt?.toDate() || new Date(),
+                };
+                return acc;
+              },
+              {} as Record<string, Participant>
+            ),
+          } as Bucket;
+        });
+        setBuckets(bucketsData);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching buckets:', error);
+        setLoading(false);
+      }
+    );
 
     return () => unsubscribe();
   }, [currentUser]);
@@ -62,16 +69,23 @@ export function useBuckets() {
     if (!currentUser) throw new Error('Not authenticated');
 
     try {
+      const participantData: any = {
+        uid: currentUser.uid,
+        email: currentUser.email!,
+        addedAt: serverTimestamp(),
+      };
+
+      // Only include displayName if it exists (Firestore doesn't accept undefined)
+      if (currentUser.displayName) {
+        participantData.displayName = currentUser.displayName;
+      }
+
       await addDoc(collection(db, 'buckets'), {
         name,
         currency,
+        participantIds: [currentUser.uid],
         participants: {
-          [currentUser.uid]: {
-            uid: currentUser.uid,
-            email: currentUser.email!,
-            displayName: currentUser.displayName || undefined,
-            addedAt: serverTimestamp(),
-          },
+          [currentUser.uid]: participantData,
         },
         createdBy: currentUser.uid,
         createdAt: serverTimestamp(),
