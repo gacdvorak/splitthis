@@ -61,23 +61,26 @@ export function useBuckets() {
   async function createBucket(name: string, currency: string) {
     if (!currentUser) throw new Error('Not authenticated');
 
-    const participant: Participant = {
-      uid: currentUser.uid,
-      email: currentUser.email!,
-      displayName: currentUser.displayName || undefined,
-      addedAt: new Date(),
-    };
-
-    await addDoc(collection(db, 'buckets'), {
-      name,
-      currency,
-      participants: {
-        [currentUser.uid]: participant,
-      },
-      createdBy: currentUser.uid,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+    try {
+      await addDoc(collection(db, 'buckets'), {
+        name,
+        currency,
+        participants: {
+          [currentUser.uid]: {
+            uid: currentUser.uid,
+            email: currentUser.email!,
+            displayName: currentUser.displayName || undefined,
+            addedAt: serverTimestamp(),
+          },
+        },
+        createdBy: currentUser.uid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error('Error creating bucket:', error);
+      throw error;
+    }
   }
 
   async function updateBucket(bucketId: string, updates: Partial<Bucket>) {

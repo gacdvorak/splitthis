@@ -20,9 +20,10 @@ export default function Buckets() {
       setBucketName('');
       setCurrency('USD');
       setShowCreateModal(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create bucket:', error);
-      alert('Failed to create bucket');
+      const errorMessage = error?.message || 'Unknown error';
+      alert(`Failed to create bucket: ${errorMessage}`);
     } finally {
       setCreating(false);
     }
