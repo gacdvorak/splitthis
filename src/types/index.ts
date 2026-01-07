@@ -47,9 +47,25 @@ export interface Bucket {
   name: string;
   currency: string;
   participants: Record<string, Participant>; // uid -> Participant
+  participantIds: string[]; // Array for efficient Firestore queries
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface Invitation {
+  id: string;
+  bucketId: string;
+  bucketName: string;
+  email: string;
+  invitedBy: string; // uid of inviter
+  invitedByEmail: string;
+  token: string; // unique token for the invitation link
+  status: 'pending' | 'accepted' | 'expired';
+  createdAt: Date;
+  expiresAt: Date;
+  acceptedAt?: Date;
+  acceptedByUid?: string; // uid of user who accepted (may differ from invited email if they sign up with different email)
 }
 
 export interface Settlement {
