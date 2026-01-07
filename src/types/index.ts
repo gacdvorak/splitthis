@@ -66,6 +66,7 @@ export interface Invitation {
   expiresAt: Date;
   acceptedAt?: Date;
   acceptedByUid?: string; // uid of user who accepted (may differ from invited email if they sign up with different email)
+  emailSentAt?: Date; // timestamp when automated email was sent
 }
 
 export interface Settlement {
