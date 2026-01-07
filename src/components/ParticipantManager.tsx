@@ -299,9 +299,9 @@ export default function ParticipantManager({ bucket }: Props) {
         </div>
       </div>
 
-      <div className="card mt-6">
-        <h3 className="font-semibold mb-4">Share Bucket</h3>
-        <p className="text-sm text-dark-muted mb-4">
+      <div className="card mt-6" style={{ backgroundColor: '#ff0000', padding: '20px', border: '5px solid yellow' }}>
+        <h3 className="font-semibold mb-4" style={{ color: 'white', fontSize: '24px' }}>⭐ SHARE BUCKET ⭐</h3>
+        <p className="text-sm text-dark-muted mb-4" style={{ color: 'white' }}>
           Share this bucket link with others to invite them to join
         </p>
         <div className="grid grid-cols-2 gap-3">
