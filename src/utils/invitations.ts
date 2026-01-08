@@ -186,6 +186,8 @@ export async function acceptInvitation(
   userEmail: string,
   displayName?: string
 ): Promise<void> {
+  console.log('[acceptInvitation] Starting:', { invitationId, userUid, userEmail });
+
   // Get the invitation
   const invitationDoc = await getDoc(doc(db, 'invitations', invitationId));
 
@@ -194,6 +196,7 @@ export async function acceptInvitation(
   }
 
   const invitation = invitationDoc.data();
+  console.log('[acceptInvitation] Invitation data:', invitation);
 
   if (invitation.status !== 'pending') {
     throw new Error('Invitation is no longer valid');
@@ -217,9 +220,15 @@ export async function acceptInvitation(
   }
 
   const bucket = bucketDoc.data() as Bucket;
+  console.log('[acceptInvitation] Bucket data:', {
+    id: invitation.bucketId,
+    participantIds: bucket.participantIds,
+    participants: Object.keys(bucket.participants || {})
+  });
 
   // Check if user is already a participant
   if (bucket.participantIds && bucket.participantIds.includes(userUid)) {
+    console.log('[acceptInvitation] User already a participant, marking invitation as accepted');
     // User is already a participant, just mark invitation as accepted
     await updateDoc(doc(db, 'invitations', invitationId), {
       status: 'accepted',
@@ -244,14 +253,29 @@ export async function acceptInvitation(
     updatedAt: serverTimestamp()
   };
 
-  await updateDoc(bucketRef, updates);
+  console.log('[acceptInvitation] Updating bucket with:', updates);
+
+  try {
+    await updateDoc(bucketRef, updates);
+    console.log('[acceptInvitation] Bucket updated successfully');
+  } catch (err) {
+    console.error('[acceptInvitation] Failed to update bucket:', err);
+    throw err;
+  }
 
   // Mark invitation as accepted
-  await updateDoc(doc(db, 'invitations', invitationId), {
-    status: 'accepted',
-    acceptedAt: serverTimestamp(),
-    acceptedByUid: userUid
-  });
+  console.log('[acceptInvitation] Marking invitation as accepted');
+  try {
+    await updateDoc(doc(db, 'invitations', invitationId), {
+      status: 'accepted',
+      acceptedAt: serverTimestamp(),
+      acceptedByUid: userUid
+    });
+    console.log('[acceptInvitation] Invitation marked as accepted');
+  } catch (err) {
+    console.error('[acceptInvitation] Failed to update invitation:', err);
+    throw err;
+  }
 }
 
 /**

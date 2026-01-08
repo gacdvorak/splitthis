@@ -41,8 +41,7 @@ service cloud.firestore {
           resource.data.participantIds.toSet().difference(request.resource.data.participantIds.toSet()).size() == 0 &&
           // Critical fields aren't being changed
           resource.data.createdBy == request.resource.data.createdBy &&
-          resource.data.name == request.resource.data.name &&
-          resource.data.currency == request.resource.data.currency
+          resource.data.name == request.resource.data.name
         )
       );
 

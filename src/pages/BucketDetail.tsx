@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
 import { useBuckets } from '../hooks/useBuckets';
 import { useExpenses } from '../hooks/useExpenses';
 import { useCredits } from '../hooks/useCredits';

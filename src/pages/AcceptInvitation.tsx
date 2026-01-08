@@ -68,6 +68,7 @@ export default function AcceptInvitation() {
     setError('');
 
     try {
+      console.log('Accepting invitation:', { invId, bucketId: inv.bucketId, userUid: currentUser.uid });
       await acceptInvitation(
         invId,
         currentUser.uid,
@@ -75,11 +76,14 @@ export default function AcceptInvitation() {
         currentUser.displayName || undefined
       );
 
+      console.log('Invitation accepted successfully');
       // Redirect to the bucket
       navigate(`/buckets/${inv.bucketId}`);
     } catch (err: any) {
       console.error('Error accepting invitation:', err);
-      setError(err.message || 'Failed to accept invitation');
+      console.error('Error code:', err.code);
+      console.error('Error details:', err);
+      setError(`Failed to accept invitation: ${err.message || err.code || 'Unknown error'}`);
       setAccepting(false);
     }
   }
