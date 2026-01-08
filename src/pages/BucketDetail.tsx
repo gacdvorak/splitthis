@@ -389,7 +389,7 @@ export default function BucketDetail() {
       </div>
 
       {/* Action Buttons */}
-      {activeTab === 'transactions' && (
+      {activeTab === 'transactions' && transactions.length > 0 && (
         <div className="fixed bottom-6 left-0 right-0 px-6">
           <div className="max-w-2xl mx-auto flex gap-3">
             <button
