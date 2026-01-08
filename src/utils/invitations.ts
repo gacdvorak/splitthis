@@ -2,6 +2,7 @@ import {
   collection,
   addDoc,
   updateDoc,
+  deleteDoc,
   doc,
   serverTimestamp,
   query,
@@ -280,6 +281,59 @@ export async function acceptInvitation(
     console.error('[acceptInvitation] Failed to update invitation:', err);
     throw err;
   }
+}
+
+/**
+ * Get all pending invitations for a bucket
+ */
+export async function getPendingInvitationsByBucket(bucketId: string): Promise<Array<{ id: string; data: Invitation }>> {
+  const invitationsQuery = query(
+    collection(db, 'invitations'),
+    where('bucketId', '==', bucketId),
+    where('status', '==', 'pending')
+  );
+
+  const querySnapshot = await getDocs(invitationsQuery);
+
+  const invitations: Array<{ id: string; data: Invitation }> = [];
+
+  querySnapshot.forEach((doc) => {
+    const data = doc.data();
+
+    // Check if invitation has expired
+    const expiresAt = data.expiresAt?.toDate();
+    if (expiresAt && expiresAt < new Date()) {
+      // Skip expired invitations (they'll be cleaned up elsewhere)
+      return;
+    }
+
+    invitations.push({
+      id: doc.id,
+      data: {
+        id: doc.id,
+        bucketId: data.bucketId,
+        bucketName: data.bucketName,
+        email: data.email,
+        invitedBy: data.invitedBy,
+        invitedByEmail: data.invitedByEmail,
+        token: data.token,
+        status: data.status,
+        createdAt: data.createdAt?.toDate(),
+        expiresAt: data.expiresAt?.toDate(),
+        acceptedAt: data.acceptedAt?.toDate(),
+        acceptedByUid: data.acceptedByUid
+      }
+    });
+  });
+
+  return invitations;
+}
+
+/**
+ * Delete an invitation
+ */
+export async function deleteInvitation(invitationId: string): Promise<void> {
+  await deleteDoc(doc(db, 'invitations', invitationId));
 }
 
 /**

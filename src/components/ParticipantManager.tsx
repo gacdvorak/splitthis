@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { doc, updateDoc, deleteField } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import type { Bucket, Participant } from '../types';
+import type { Bucket, Participant, Invitation } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import {
   createInvitation,
   generateInvitationLink,
-  generateInvitationEmailLink
+  generateInvitationEmailLink,
+  getPendingInvitationsByBucket,
+  deleteInvitation
 } from '../utils/invitations';
 
 interface Props {
@@ -20,9 +22,24 @@ export default function ParticipantManager({ bucket }: Props) {
   const [invitationLink, setInvitationLink] = useState('');
   const [showInviteOptions, setShowInviteOptions] = useState(false);
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
+  const [pendingInvitations, setPendingInvitations] = useState<Array<{ id: string; data: Invitation }>>([]);
   const { currentUser } = useAuth();
 
   const participants = Object.values(bucket.participants);
+
+  // Load pending invitations
+  useEffect(() => {
+    async function loadPendingInvitations() {
+      try {
+        const invitations = await getPendingInvitationsByBucket(bucket.id);
+        setPendingInvitations(invitations);
+      } catch (err) {
+        console.error('Failed to load pending invitations:', err);
+      }
+    }
+
+    loadPendingInvitations();
+  }, [bucket.id]);
 
   async function handleAddParticipant() {
     if (!email.trim() || !currentUser) return;
@@ -40,10 +57,16 @@ export default function ParticipantManager({ bucket }: Props) {
 
       const emailLower = email.trim().toLowerCase();
 
-      // Check if already added
+      // Check if already a participant
       const exists = participants.some((p) => p.email.toLowerCase() === emailLower);
       if (exists) {
         throw new Error('This person is already in the bucket');
+      }
+
+      // Check if already has a pending invitation
+      const hasPendingInvite = pendingInvitations.some((inv) => inv.data.email.toLowerCase() === emailLower);
+      if (hasPendingInvite) {
+        throw new Error('This person already has a pending invitation');
       }
 
       // Create invitation
@@ -58,6 +81,10 @@ export default function ParticipantManager({ bucket }: Props) {
       const link = generateInvitationLink(token);
       setInvitationLink(link);
       setShowInviteOptions(true);
+
+      // Reload pending invitations to show the new one
+      const invitations = await getPendingInvitationsByBucket(bucket.id);
+      setPendingInvitations(invitations);
 
     } catch (err: any) {
       setError(err.message);
@@ -169,6 +196,23 @@ export default function ParticipantManager({ bucket }: Props) {
     }
   }
 
+  async function handleRemovePendingInvitation(invitationId: string, email: string) {
+    if (!confirm(`Cancel invitation for ${email}?`)) {
+      return;
+    }
+
+    try {
+      await deleteInvitation(invitationId);
+
+      // Reload pending invitations
+      const invitations = await getPendingInvitationsByBucket(bucket.id);
+      setPendingInvitations(invitations);
+    } catch (err) {
+      console.error('Failed to delete invitation:', err);
+      alert('Failed to cancel invitation');
+    }
+  }
+
   function getParticipantName(participant: Participant): string {
     return participant.displayName || participant.email.split('@')[0];
   }
@@ -261,7 +305,7 @@ export default function ParticipantManager({ bucket }: Props) {
 
       <div className="card mb-6">
         <h3 className="font-semibold mb-4">
-          Participants ({participants.length})
+          Participants ({participants.length + pendingInvitations.length})
         </h3>
         <div className="space-y-3">
           {participants.map((participant) => {
@@ -293,6 +337,31 @@ export default function ParticipantManager({ bucket }: Props) {
                     Remove
                   </button>
                 )}
+              </div>
+            );
+          })}
+
+          {pendingInvitations.map((invitation) => {
+            const displayName = invitation.data.email.split('@')[0];
+
+            return (
+              <div
+                key={invitation.id}
+                className="flex justify-between items-center pb-3 border-b border-dark-border last:border-0 opacity-70"
+              >
+                <div>
+                  <div className="font-medium">
+                    {displayName}
+                    <span className="text-xs text-yellow-500 ml-2">(pending)</span>
+                  </div>
+                  <div className="text-sm text-dark-muted">{invitation.data.email}</div>
+                </div>
+                <button
+                  onClick={() => handleRemovePendingInvitation(invitation.id, invitation.data.email)}
+                  className="text-sm text-red-500 hover:text-red-400"
+                >
+                  Cancel
+                </button>
               </div>
             );
           })}
