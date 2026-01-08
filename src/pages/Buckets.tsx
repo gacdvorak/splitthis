@@ -42,10 +42,7 @@ export default function Buckets() {
       {/* Header */}
       <div className="bg-dark-bg sticky top-0 z-10 px-6 py-4">
         <div className="max-w-2xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <img src="/splitthis-avatar.svg" alt="SplitThis" className="w-10 h-10" />
-            <span className="text-title">splitthis</span>
-          </div>
+          <img src="/splitthis-logo.svg" alt="SplitThis" className="h-8" />
           <button onClick={logout} className="text-dark-text hover:text-brand-primary text-body transition-colors">
             Sign Out
           </button>

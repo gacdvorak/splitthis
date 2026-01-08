@@ -87,7 +87,7 @@ export default function CreditForm({ bucket, credit, onClose, onSave }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-50 overflow-y-auto">
-      <div className="bg-dark-surface w-full sm:max-w-md sm:rounded-lg p-6 max-h-screen overflow-y-auto">
+      <div className="bg-dark-card w-full sm:max-w-md sm:rounded-2xl p-6 max-h-screen overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">
           {credit ? 'Edit Credit' : 'Add Credit'}
         </h2>

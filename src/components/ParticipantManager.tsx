@@ -176,7 +176,7 @@ export default function ParticipantManager({ bucket }: Props) {
   return (
     <div>
       <div className="card mb-6">
-        <h3 className="font-semibold mb-4">Invite Person</h3>
+        <h3 className="font-semibold mb-4">Add Person</h3>
 
         {!showInviteOptions ? (
           <div className="space-y-3">
@@ -196,12 +196,12 @@ export default function ParticipantManager({ bucket }: Props) {
               disabled={adding || !email.trim()}
               className="btn-primary w-full"
             >
-              {adding ? 'Creating Invitation...' : 'Send Invitation'}
+              {adding ? 'Creating Invitation...' : 'Add to Bucket'}
             </button>
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="bg-dark-surface p-4 rounded-md border border-dark-border">
+            <div className="bg-dark-card p-4 rounded-xl border border-dark-border">
               <p className="text-sm text-dark-muted mb-2">
                 Invitation created for: <span className="text-white font-medium">{email}</span>
               </p>
