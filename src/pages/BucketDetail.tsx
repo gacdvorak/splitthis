@@ -121,48 +121,65 @@ export default function BucketDetail() {
     return participant.displayName || participant.email.split('@')[0];
   }
 
+  async function handleDeleteBucket() {
+    if (!confirm('Are you sure you want to delete this bucket? This action cannot be undone.')) {
+      return;
+    }
+    // TODO: Implement bucket deletion
+    alert('Bucket deletion not yet implemented');
+  }
+
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen pb-32">
       {/* Header */}
-      <div className="bg-dark-surface border-b border-dark-border sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <Link to="/" className="text-blue-500 text-sm mb-2 inline-block">
-            ← Back to Buckets
-          </Link>
-          <h1 className="text-2xl font-bold">{bucket.name}</h1>
-          <p className="text-sm text-dark-muted mt-1">
+      <div className="bg-dark-bg sticky top-0 z-10 px-6 py-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Link to="/" className="text-dark-text hover:text-brand-primary text-body transition-colors flex items-center gap-2">
+              <span>←</span>
+              <span>Back</span>
+            </Link>
+            <button
+              onClick={handleDeleteBucket}
+              className="text-destructive hover:text-destructive/80 text-body transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+          <h1 className="text-display mb-2">{bucket.name}</h1>
+          <p className="text-body text-dark-text">
             {currencySymbol} {bucket.currency}
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-t border-dark-border">
+        <div className="flex border-b border-dark-border mt-6 max-w-2xl mx-auto">
           <button
             onClick={() => setActiveTab('transactions')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 py-3 text-body font-medium transition-colors ${
               activeTab === 'transactions'
-                ? 'text-blue-500 border-b-2 border-blue-500'
-                : 'text-dark-muted'
+                ? 'text-brand-primary border-b-2 border-brand-primary'
+                : 'text-dark-secondary'
             }`}
           >
             Transactions
           </button>
           <button
             onClick={() => setActiveTab('settlement')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 py-3 text-body font-medium transition-colors ${
               activeTab === 'settlement'
-                ? 'text-blue-500 border-b-2 border-blue-500'
-                : 'text-dark-muted'
+                ? 'text-brand-primary border-b-2 border-brand-primary'
+                : 'text-dark-secondary'
             }`}
           >
             Settlement
           </button>
           <button
             onClick={() => setActiveTab('participants')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 py-3 text-body font-medium transition-colors ${
               activeTab === 'participants'
-                ? 'text-blue-500 border-b-2 border-blue-500'
-                : 'text-dark-muted'
+                ? 'text-brand-primary border-b-2 border-brand-primary'
+                : 'text-dark-secondary'
             }`}
           >
             People
@@ -171,14 +188,14 @@ export default function BucketDetail() {
       </div>
 
       {/* Content */}
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      <div className="max-w-2xl mx-auto px-6 py-6">
         {/* Transactions Tab */}
         {activeTab === 'transactions' && (
           <div>
             {transactions.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-dark-muted mb-4">No transactions yet</p>
-                <div className="space-x-3">
+                <p className="text-dark-secondary mb-4">No transactions yet</p>
+                <div className="flex gap-3 justify-center">
                   <button onClick={() => setShowExpenseForm(true)} className="btn-primary">
                     Add Expense
                   </button>
@@ -188,7 +205,7 @@ export default function BucketDetail() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {transactions.map((transaction) => {
                   const isExpense = transaction.type === 'expense';
                   const payer = isExpense
@@ -197,43 +214,40 @@ export default function BucketDetail() {
 
                   return (
                     <div key={transaction.id} className="card">
-                      <div className="flex justify-between items-start mb-2">
+                      <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold">{transaction.title}</h3>
+                          <div className="flex items-start gap-2 mb-2">
+                            <h3 className="text-strong">{transaction.title}</h3>
                             <span
-                              className={`text-xs px-2 py-0.5 rounded ${
+                              className={`text-xs px-2 py-1 rounded-md font-bold ${
                                 isExpense
-                                  ? 'bg-red-900/50 text-red-300'
-                                  : 'bg-green-900/50 text-green-300'
+                                  ? 'bg-destructive/20 text-destructive'
+                                  : 'bg-brand-primary/20 text-brand-primary'
                               }`}
                             >
                               {isExpense ? 'Expense' : 'Credit'}
                             </span>
                           </div>
-                          <p className="text-sm text-dark-muted mt-1">
+                          <p className="text-small text-dark-secondary">
                             {isExpense ? 'Paid by' : 'Received by'} {payer}
                           </p>
-                          {transaction.notes && (
-                            <p className="text-sm text-dark-muted mt-1">{transaction.notes}</p>
-                          )}
                         </div>
                         <div className="text-right ml-4">
                           <div
-                            className={`text-lg font-semibold ${
-                              isExpense ? 'text-red-400' : 'text-green-400'
+                            className={`text-display ${
+                              isExpense ? 'text-destructive' : 'text-brand-primary'
                             }`}
                           >
                             {isExpense ? '-' : '+'}
                             {currencySymbol}
                             {transaction.amount.toFixed(2)}
                           </div>
-                          <div className="text-xs text-dark-muted mt-1">
+                          <div className="text-caption mt-1">
                             {transaction.split.type === 'even' ? 'Split evenly' : 'Custom split'}
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-2 mt-3 pt-3 border-t border-dark-border">
+                      <div className="flex gap-4 mt-4">
                         <button
                           onClick={() => {
                             if (isExpense) {
@@ -244,7 +258,7 @@ export default function BucketDetail() {
                               setShowCreditForm(true);
                             }
                           }}
-                          className="text-sm text-blue-500 hover:text-blue-400"
+                          className="text-body text-dark-text hover:text-brand-primary transition-colors"
                         >
                           Edit
                         </button>
@@ -262,7 +276,7 @@ export default function BucketDetail() {
                               }
                             }
                           }}
-                          className="text-sm text-red-500 hover:text-red-400"
+                          className="text-body text-destructive hover:text-destructive/80 transition-colors"
                         >
                           Delete
                         </button>
@@ -279,18 +293,18 @@ export default function BucketDetail() {
         {activeTab === 'settlement' && (
           <div>
             <div className="card mb-6">
-              <h3 className="font-semibold mb-4">Summary</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <h3 className="text-strong mb-4">Summary</h3>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-dark-muted">Total Expenses</div>
-                  <div className="text-lg font-semibold text-red-400">
+                  <div className="text-small text-dark-secondary mb-2">Total Expenses</div>
+                  <div className="text-title text-destructive">
                     {currencySymbol}
                     {summary.totalExpenses.toFixed(2)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-dark-muted">Total Credits</div>
-                  <div className="text-lg font-semibold text-green-400">
+                  <div className="text-small text-dark-secondary mb-2">Total Credits</div>
+                  <div className="text-title text-brand-primary">
                     {currencySymbol}
                     {summary.totalCredits.toFixed(2)}
                   </div>
@@ -299,7 +313,7 @@ export default function BucketDetail() {
             </div>
 
             <div className="card mb-6">
-              <h3 className="font-semibold mb-4">Balances</h3>
+              <h3 className="text-strong mb-4">Balances</h3>
               <div className="space-y-3">
                 {participants.map((participant) => {
                   const balance = summary.balances[participant.uid] || 0;
@@ -309,21 +323,21 @@ export default function BucketDetail() {
                   return (
                     <div
                       key={participant.uid}
-                      className="flex justify-between items-center pb-3 border-b border-dark-border last:border-0"
+                      className="flex justify-between items-center py-3 border-b border-dark-border last:border-0"
                     >
-                      <span className="text-sm">
+                      <span className="text-body">
                         {name}
                         {isCurrentUser && (
-                          <span className="text-xs text-dark-muted ml-2">(you)</span>
+                          <span className="text-caption ml-2">(you)</span>
                         )}
                       </span>
                       <span
-                        className={`font-medium ${
+                        className={`text-body font-bold ${
                           balance > 0.01
-                            ? 'text-green-400'
+                            ? 'text-brand-primary'
                             : balance < -0.01
-                            ? 'text-red-400'
-                            : 'text-dark-muted'
+                            ? 'text-destructive'
+                            : 'text-dark-secondary'
                         }`}
                       >
                         {balance > 0.01
@@ -340,23 +354,23 @@ export default function BucketDetail() {
 
             {summary.settlements.length > 0 && (
               <div className="card">
-                <h3 className="font-semibold mb-4">Suggested Settlements</h3>
+                <h3 className="text-strong mb-4">Suggested Settlements</h3>
                 <div className="space-y-3">
                   {summary.settlements.map((settlement, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-3 bg-dark-bg rounded-lg"
+                      className="flex items-center justify-between p-4 bg-dark-bg rounded-xl"
                     >
-                      <div className="text-sm">
-                        <span className="font-medium">
+                      <div className="text-body">
+                        <span className="text-strong">
                           {getParticipantName(settlement.from)}
                         </span>
-                        <span className="text-dark-muted mx-2">pays</span>
-                        <span className="font-medium">
+                        <span className="text-dark-secondary mx-2">pays</span>
+                        <span className="text-strong">
                           {getParticipantName(settlement.to)}
                         </span>
                       </div>
-                      <div className="font-semibold text-blue-500">
+                      <div className="text-strong text-brand-primary">
                         {currencySymbol}
                         {settlement.amount.toFixed(2)}
                       </div>
@@ -374,23 +388,27 @@ export default function BucketDetail() {
         )}
       </div>
 
-      {/* Floating Action Buttons */}
-      {activeTab === 'transactions' && transactions.length > 0 && (
-        <div className="fixed bottom-6 right-6 flex flex-col gap-3">
-          <button
-            onClick={() => setShowCreditForm(true)}
-            className="w-14 h-14 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl transition-colors"
-            aria-label="Add credit"
-          >
-            +
-          </button>
-          <button
-            onClick={() => setShowExpenseForm(true)}
-            className="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl transition-colors"
-            aria-label="Add expense"
-          >
-            +
-          </button>
+      {/* Action Buttons */}
+      {activeTab === 'transactions' && (
+        <div className="fixed bottom-6 left-0 right-0 px-6">
+          <div className="max-w-2xl mx-auto flex gap-3">
+            <button
+              onClick={() => setShowExpenseForm(true)}
+              className="btn-primary flex-1 flex items-center justify-center gap-2"
+              aria-label="Add expense"
+            >
+              <span className="text-2xl leading-none">+</span>
+              <span>Add expense</span>
+            </button>
+            <button
+              onClick={() => setShowCreditForm(true)}
+              className="btn-secondary flex-1 flex items-center justify-center gap-2"
+              aria-label="Add credit"
+            >
+              <span className="text-2xl leading-none">+</span>
+              <span>Add credit</span>
+            </button>
+          </div>
         </div>
       )}
 

@@ -38,22 +38,25 @@ export default function Buckets() {
   }
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen pb-24">
       {/* Header */}
-      <div className="bg-dark-surface border-b border-dark-border sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">My Buckets</h1>
-          <button onClick={logout} className="text-dark-muted hover:text-dark-text text-sm">
+      <div className="bg-dark-bg sticky top-0 z-10 px-6 py-4">
+        <div className="max-w-2xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <img src="/splitthis-avatar.svg" alt="SplitThis" className="w-10 h-10" />
+            <span className="text-title">splitthis</span>
+          </div>
+          <button onClick={logout} className="text-dark-text hover:text-brand-primary text-body transition-colors">
             Sign Out
           </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      <div className="max-w-2xl mx-auto px-6 py-6">
         {buckets.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-dark-muted mb-4">No expense buckets yet</p>
+            <p className="text-dark-secondary mb-4">No expense buckets yet</p>
             <button
               onClick={() => setShowCreateModal(true)}
               className="btn-primary"
@@ -62,53 +65,67 @@ export default function Buckets() {
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
-            {buckets.map((bucket) => (
-              <Link
-                key={bucket.id}
-                to={`/bucket/${bucket.id}`}
-                className="card block hover:bg-dark-border transition-colors"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold text-lg">{bucket.name}</h3>
-                    <p className="text-sm text-dark-muted mt-1">
-                      {Object.keys(bucket.participants).length} participant
-                      {Object.keys(bucket.participants).length !== 1 ? 's' : ''}
-                    </p>
+          <div className="space-y-4">
+            {buckets.map((bucket) => {
+              const currencySymbol = bucket.currency === 'USD' ? '$' :
+                                   bucket.currency === 'EUR' ? '€' :
+                                   bucket.currency === 'GBP' ? '£' :
+                                   bucket.currency === 'JPY' ? '¥' :
+                                   bucket.currency === 'INR' ? '₹' :
+                                   '$';
+
+              return (
+                <Link
+                  key={bucket.id}
+                  to={`/bucket/${bucket.id}`}
+                  className="card block hover:bg-dark-card/80 transition-colors"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-title mb-2">{bucket.name}</h3>
+                      <p className="text-small text-dark-secondary">
+                        {Object.keys(bucket.participants).length} participant
+                        {Object.keys(bucket.participants).length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-title text-brand-primary">
+                        {currencySymbol} {bucket.currency}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-sm font-medium text-blue-500">
-                      {bucket.currency}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Floating Action Button */}
+      {/* New Bucket Button */}
       {buckets.length > 0 && (
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl transition-colors"
-          aria-label="Create new bucket"
-        >
-          +
-        </button>
+        <div className="fixed bottom-6 left-0 right-0 px-6">
+          <div className="max-w-2xl mx-auto">
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="btn-primary w-full flex items-center justify-center gap-2"
+              aria-label="Create new bucket"
+            >
+              <span className="text-2xl leading-none">+</span>
+              <span>New bucket</span>
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Create Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-dark-surface w-full sm:max-w-md sm:rounded-lg p-6 animate-slide-up">
-            <h2 className="text-xl font-bold mb-4">Create Expense Bucket</h2>
+          <div className="bg-dark-card w-full sm:max-w-md sm:rounded-2xl p-6 animate-slide-up">
+            <h2 className="text-title mb-6">Create Expense Bucket</h2>
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="bucket-name" className="block text-sm font-medium mb-2">
+                <label htmlFor="bucket-name" className="block text-small mb-2 text-dark-secondary">
                   Bucket Name
                 </label>
                 <input
@@ -123,7 +140,7 @@ export default function Buckets() {
               </div>
 
               <div>
-                <label htmlFor="currency" className="block text-sm font-medium mb-2">
+                <label htmlFor="currency" className="block text-small mb-2 text-dark-secondary">
                   Currency
                 </label>
                 <select
@@ -142,7 +159,7 @@ export default function Buckets() {
                 </select>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-4">
                 <button
                   onClick={() => {
                     setShowCreateModal(false);
