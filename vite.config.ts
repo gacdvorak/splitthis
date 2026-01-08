@@ -13,8 +13,8 @@ export default defineConfig({
         name: 'SplitThis - Expense Splitter',
         short_name: 'SplitThis',
         description: 'Split expenses easily with friends and family',
-        theme_color: '#0a0a0a',
-        background_color: '#0a0a0a',
+        theme_color: '#0E0E0E',
+        background_color: '#0E0E0E',
         display: 'standalone',
         icons: [
           {

@@ -8,6 +8,7 @@ import {
   onAuthStateChanged,
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import SplashScreen from '../components/SplashScreen';
 
 interface AuthContextType {
   currentUser: FirebaseUser | null;
@@ -62,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {loading ? <SplashScreen /> : children}
     </AuthContext.Provider>
   );
 }
