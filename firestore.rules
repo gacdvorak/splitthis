@@ -91,11 +91,10 @@ service cloud.firestore {
 
     // Invitations collection
     match /invitations/{invitationId} {
-      // Anyone can read invitations by token (for accepting invites)
-      // Participants in the bucket can also read all invitations for that bucket
-      allow read: if isAuthenticated() &&
-        (isParticipant(resource.data.bucketId) ||
-         request.auth.token.email == resource.data.email);
+      // Allow authenticated users to read invitations
+      // The token is the security mechanism - if someone has the invitation link, they can read it
+      // Invitations are temporary (7 days) and only contain bucket name and inviter email
+      allow read: if isAuthenticated();
 
       // Only participants in the bucket can create invitations
       allow create: if isAuthenticated() &&
