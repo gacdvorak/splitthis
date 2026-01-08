@@ -259,46 +259,7 @@ export default function ParticipantManager({ bucket }: Props) {
         )}
       </div>
 
-      <div className="card mt-6" style={{ backgroundColor: '#ff0000', padding: '20px', border: '5px solid yellow' }}>
-        <h3 className="font-semibold mb-4" style={{ color: 'white', fontSize: '24px' }}>⭐ SHARE BUCKET ⭐</h3>
-        <p className="text-sm text-dark-muted mb-4" style={{ color: 'white' }}>
-          Share this bucket link with others to invite them to join
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={handleCopyBucketLink}
-            className="btn-secondary flex items-center justify-center space-x-2"
-          >
-            {copiedToClipboard ? (
-              <>
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                <span>Copied!</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                <span>Copy Link</span>
-              </>
-            )}
-          </button>
-
-          <button
-            onClick={handleShareBucket}
-            className="btn-primary flex items-center justify-center space-x-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-            </svg>
-            <span>Share Link</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="card">
+      <div className="card mb-6">
         <h3 className="font-semibold mb-4">
           Participants ({participants.length})
         </h3>
@@ -335,6 +296,45 @@ export default function ParticipantManager({ bucket }: Props) {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      <div className="card">
+        <h3 className="font-semibold mb-4">Share Bucket</h3>
+        <p className="text-sm text-dark-muted mb-4">
+          Share this bucket link with others to invite them to join
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={handleCopyBucketLink}
+            className="btn-secondary flex items-center justify-center space-x-2"
+          >
+            {copiedToClipboard ? (
+              <>
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                <span>Copied!</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <span>Copy Link</span>
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handleShareBucket}
+            className="btn-secondary flex items-center justify-center space-x-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            <span>Share Link</span>
+          </button>
         </div>
       </div>
     </div>
