@@ -239,12 +239,16 @@ export async function acceptInvitation(
   }
 
   // Add user to bucket
-  const newParticipant = {
+  const newParticipant: any = {
     uid: userUid,
     email: userEmail,
-    displayName: displayName || undefined,
     addedAt: serverTimestamp()
   };
+
+  // Only add displayName if it exists (Firestore doesn't allow undefined values)
+  if (displayName) {
+    newParticipant.displayName = displayName;
+  }
 
   // Update bucket with new participant
   const updates: any = {
