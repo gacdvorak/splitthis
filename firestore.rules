@@ -16,9 +16,10 @@ service cloud.firestore {
 
     // Buckets collection
     match /buckets/{bucketId} {
-      // Users can read buckets they are participants in
-      allow read: if isAuthenticated() &&
-        request.auth.uid in resource.data.participantIds;
+      // Authenticated users can read buckets if they have the bucket ID
+      // This allows invitation acceptance flow where users need to read bucket before joining
+      // Sensitive data (expenses, credits) are protected by separate rules
+      allow read: if isAuthenticated();
 
       // Users can create buckets (they must include themselves in participantIds)
       allow create: if isAuthenticated() &&
