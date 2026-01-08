@@ -23,6 +23,10 @@ export default function AcceptInvitation() {
   // Load invitation data - only if user is authenticated
   useEffect(() => {
     async function loadInvitation() {
+      console.log('=== AcceptInvitation v2.0 - Authentication Check ===');
+      console.log('Token:', token);
+      console.log('Current User:', currentUser?.uid || 'NOT LOGGED IN');
+
       if (!token) {
         setError('Invalid invitation link');
         setLoading(false);
@@ -32,11 +36,13 @@ export default function AcceptInvitation() {
       // If user is not logged in, show login/signup form
       // Don't try to load invitation yet (Firestore rules require auth)
       if (!currentUser) {
+        console.log('User not authenticated - showing login form');
         setLoading(false);
         return;
       }
 
       try {
+        console.log('User authenticated - loading invitation...');
         const invitationData = await getInvitationByToken(token);
 
         if (!invitationData) {
