@@ -36,24 +36,24 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">SplitThis</h1>
-          <p className="text-dark-muted">Split expenses with ease</p>
+          <img src="/splitthis-logo.svg" alt="SplitThis" className="h-12 mx-auto mb-4" />
+          <p className="text-dark-secondary text-body">Split expenses with ease</p>
         </div>
 
         <div className="card">
-          <h2 className="text-2xl font-bold mb-6">
+          <h2 className="text-display mb-6">
             {isRegistering ? 'Create Account' : 'Sign In'}
           </h2>
 
           {error && (
-            <div className="bg-red-900/50 border border-red-600 text-red-200 px-4 py-3 rounded-lg mb-4">
+            <div className="bg-destructive/20 border border-destructive text-destructive px-4 py-3 rounded-xl mb-4">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2">
+              <label htmlFor="email" className="block text-small mb-2 text-dark-secondary">
                 Email
               </label>
               <input
@@ -68,7 +68,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2">
+              <label htmlFor="password" className="block text-small mb-2 text-dark-secondary">
                 Password
               </label>
               <input
@@ -98,7 +98,7 @@ export default function Login() {
                 setIsRegistering(!isRegistering);
                 setError('');
               }}
-              className="text-blue-500 hover:text-blue-400 text-sm"
+              className="text-brand-primary hover:text-brand-primary/80 text-body transition-colors"
             >
               {isRegistering
                 ? 'Already have an account? Sign in'
