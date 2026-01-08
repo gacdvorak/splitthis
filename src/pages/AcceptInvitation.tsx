@@ -20,11 +20,18 @@ export default function AcceptInvitation() {
   const [displayName, setDisplayName] = useState('');
   const [isLogin, setIsLogin] = useState(true);
 
-  // Load invitation data
+  // Load invitation data - only if user is authenticated
   useEffect(() => {
     async function loadInvitation() {
       if (!token) {
         setError('Invalid invitation link');
+        setLoading(false);
+        return;
+      }
+
+      // If user is not logged in, show login/signup form
+      // Don't try to load invitation yet (Firestore rules require auth)
+      if (!currentUser) {
         setLoading(false);
         return;
       }
@@ -42,10 +49,8 @@ export default function AcceptInvitation() {
         setEmail(invitationData.data.email);
         setLoading(false);
 
-        // If user is already logged in, try to accept immediately
-        if (currentUser) {
-          await handleAccept(invitationData.data, invitationData.id);
-        }
+        // User is logged in, try to accept immediately
+        await handleAccept(invitationData.data, invitationData.id);
       } catch (err) {
         console.error('Error loading invitation:', err);
         setError('Failed to load invitation');
@@ -188,9 +193,11 @@ export default function AcceptInvitation() {
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">You're Invited!</h2>
           <p className="text-gray-600">
-            {invitation.invitedByEmail} invited you to join:
+            You've been invited to join an expense bucket on SplitThis.
           </p>
-          <p className="text-xl font-semibold text-blue-600 mt-2">{invitation.bucketName}</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Please log in or sign up to accept the invitation.
+          </p>
         </div>
 
         <div className="mb-6">
@@ -282,7 +289,7 @@ export default function AcceptInvitation() {
         </form>
 
         <p className="mt-4 text-xs text-gray-500 text-center">
-          By accepting, you'll be added to the "{invitation.bucketName}" bucket and can start tracking expenses together.
+          By accepting, you'll be added to the expense bucket and can start tracking expenses together.
         </p>
       </div>
     </div>
