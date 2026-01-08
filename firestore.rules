@@ -35,13 +35,10 @@ service cloud.firestore {
           // User is being added to participantIds
           request.auth.uid in request.resource.data.participantIds &&
           !(request.auth.uid in resource.data.participantIds) &&
-          // Only adding themselves (no removals, no other additions)
+          // Only adding one participant (themselves)
           request.resource.data.participantIds.size() == resource.data.participantIds.size() + 1 &&
-          // All existing participants are still there
-          resource.data.participantIds.toSet().difference(request.resource.data.participantIds.toSet()).size() == 0 &&
-          // Critical fields aren't being changed
-          resource.data.createdBy == request.resource.data.createdBy &&
-          resource.data.name == request.resource.data.name
+          // All existing participants are still there (no removals)
+          resource.data.participantIds.hasAll(request.resource.data.participantIds.removeAll([request.auth.uid]))
         )
       );
 
