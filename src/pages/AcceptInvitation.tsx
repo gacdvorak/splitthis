@@ -97,8 +97,6 @@ export default function AcceptInvitation() {
   async function handleAuth(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!invitation) return;
-
     setError('');
     setAccepting(true);
 
@@ -109,7 +107,7 @@ export default function AcceptInvitation() {
         await register(email, password);
         // Note: displayName could be set via updateProfile if needed
       }
-      // After successful auth, the useEffect will trigger acceptance
+      // After successful auth, the useEffect will trigger invitation loading and acceptance
     } catch (err: any) {
       console.error('Error during authentication:', err);
       setError(err.message || 'Authentication failed');
