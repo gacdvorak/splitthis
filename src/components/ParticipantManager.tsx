@@ -222,32 +222,41 @@ export default function ParticipantManager({ bucket }: Props) {
       <div className="card mb-6">
         <h3 className="font-semibold mb-4">Add Person</h3>
 
-        {!showInviteOptions ? (
-          <div className="space-y-3">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAddParticipant()}
-              className="input-field"
-              placeholder="Enter email address"
-            />
-            {error && (
-              <div className="text-sm text-red-400">{error}</div>
-            )}
-            <button
-              onClick={handleAddParticipant}
-              disabled={adding || !email.trim()}
-              className="btn-primary w-full"
-            >
-              {adding ? 'Creating Invitation...' : 'Add to Bucket'}
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="bg-dark-card p-4 rounded-xl border border-dark-border">
-              <p className="text-sm text-dark-muted mb-2">
-                Invitation created for: <span className="text-white font-medium">{email}</span>
+        <div className="space-y-3">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleAddParticipant()}
+            className="input-field"
+            placeholder="Enter email address"
+          />
+          {error && (
+            <div className="text-sm text-red-400">{error}</div>
+          )}
+          <button
+            onClick={handleAddParticipant}
+            disabled={adding || !email.trim()}
+            className="btn-primary w-full"
+          >
+            {adding ? 'Creating Invitation...' : 'Add to Bucket'}
+          </button>
+        </div>
+      </div>
+
+      {/* Invitation Modal */}
+      {showInviteOptions && (
+        <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-dark-card w-full sm:max-w-md sm:rounded-2xl p-6 animate-slide-up">
+            <h2 className="text-title mb-4">Share Invitation Link</h2>
+
+            <p className="text-body text-dark-text mb-6">
+              You must share the invitation link with the person you just added for them to add the bucket to their account
+            </p>
+
+            <div className="bg-dark-bg p-4 rounded-xl border border-dark-border mb-6">
+              <p className="text-sm text-dark-secondary mb-2">
+                Invitation for: <span className="text-dark-text font-medium">{email}</span>
               </p>
               <div className="mt-3 flex items-center space-x-2">
                 <input
@@ -260,7 +269,7 @@ export default function ParticipantManager({ bucket }: Props) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 mb-4">
               <button
                 onClick={handleCopyLink}
                 className="btn-secondary flex items-center justify-center space-x-2"
@@ -289,19 +298,19 @@ export default function ParticipantManager({ bucket }: Props) {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                <span>Send Email</span>
+                <span>Share Link</span>
               </button>
             </div>
 
             <button
               onClick={handleDone}
-              className="w-full text-sm text-dark-muted hover:text-white transition-colors"
+              className="w-full btn-secondary"
             >
-              Done
+              Close
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="card mb-6">
         <h3 className="font-semibold mb-4">
@@ -406,6 +415,20 @@ export default function ParticipantManager({ bucket }: Props) {
           </button>
         </div>
       </div>
+
+      <style>{`
+        @keyframes slide-up {
+          from {
+            transform: translateY(100%);
+          }
+          to {
+            transform: translateY(0);
+          }
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

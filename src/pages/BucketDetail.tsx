@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useBuckets } from '../hooks/useBuckets';
 import { useExpenses } from '../hooks/useExpenses';
@@ -14,7 +14,7 @@ type Tab = 'transactions' | 'settlement' | 'participants';
 
 export default function BucketDetail() {
   const { bucketId } = useParams<{ bucketId: string }>();
-  const { buckets } = useBuckets();
+  const { buckets, updateBucket, deleteBucket } = useBuckets();
   const { expenses, createExpense, updateExpense, deleteExpense } = useExpenses(bucketId);
   const { credits, createCredit, updateCredit, deleteCredit } = useCredits(bucketId);
   const { currentUser } = useAuth();
@@ -26,8 +26,19 @@ export default function BucketDetail() {
   const [editingCredit, setEditingCredit] = useState<any>(null);
   const [checkingInvitation, setCheckingInvitation] = useState(true);
   const [invitationError, setInvitationError] = useState<string>('');
+  const [showEditBucketModal, setShowEditBucketModal] = useState(false);
+  const [editBucketName, setEditBucketName] = useState('');
+  const [editBucketCurrency, setEditBucketCurrency] = useState('');
+  const [savingBucket, setSavingBucket] = useState(false);
+
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const bucket = buckets.find((b) => b.id === bucketId);
+
+  // Scroll to top when bucket is first opened
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [bucketId]);
 
   // Check for pending invitation and auto-accept when bucket is accessed
   useEffect(() => {
@@ -121,12 +132,46 @@ export default function BucketDetail() {
     return participant.displayName || participant.email.split('@')[0];
   }
 
+  function handleEditBucket() {
+    if (!bucket) return;
+    setEditBucketName(bucket.name);
+    setEditBucketCurrency(bucket.currency);
+    setShowEditBucketModal(true);
+  }
+
+  async function handleSaveBucket() {
+    if (!bucket || !editBucketName.trim()) return;
+
+    setSavingBucket(true);
+    try {
+      await updateBucket(bucket.id, {
+        name: editBucketName.trim(),
+        currency: editBucketCurrency,
+      });
+      setShowEditBucketModal(false);
+    } catch (error) {
+      console.error('Failed to update bucket:', error);
+      alert('Failed to update bucket');
+    } finally {
+      setSavingBucket(false);
+    }
+  }
+
   async function handleDeleteBucket() {
+    if (!bucket) return;
+
     if (!confirm('Are you sure you want to delete this bucket? This action cannot be undone.')) {
       return;
     }
-    // TODO: Implement bucket deletion
-    alert('Bucket deletion not yet implemented');
+
+    try {
+      await deleteBucket(bucket.id);
+      // Navigate back to buckets list after deletion
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Failed to delete bucket:', error);
+      alert('Failed to delete bucket');
+    }
   }
 
   return (
@@ -139,12 +184,22 @@ export default function BucketDetail() {
               <span>←</span>
               <span>Back</span>
             </Link>
-            <button
-              onClick={handleDeleteBucket}
-              className="text-destructive hover:text-destructive/80 text-body transition-colors"
-            >
-              Delete
-            </button>
+            {bucket.createdBy === currentUser?.uid && (
+              <div className="flex gap-4">
+                <button
+                  onClick={handleEditBucket}
+                  className="text-dark-text hover:text-brand-primary text-body transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={handleDeleteBucket}
+                  className="text-destructive hover:text-destructive/80 text-body transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
           </div>
           <h1 className="text-display mb-2">{bucket.name}</h1>
           <p className="text-body text-dark-text">
@@ -426,6 +481,8 @@ export default function BucketDetail() {
               await updateExpense(editingExpense.id, expense);
             } else {
               await createExpense({ ...expense, bucketId: bucket.id });
+              // Scroll to top when adding new expense
+              window.scrollTo(0, 0);
             }
             setShowExpenseForm(false);
             setEditingExpense(null);
@@ -447,12 +504,95 @@ export default function BucketDetail() {
               await updateCredit(editingCredit.id, credit);
             } else {
               await createCredit({ ...credit, bucketId: bucket.id });
+              // Scroll to top when adding new credit
+              window.scrollTo(0, 0);
             }
             setShowCreditForm(false);
             setEditingCredit(null);
           }}
         />
       )}
+
+      {/* Edit Bucket Modal */}
+      {showEditBucketModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-dark-card w-full sm:max-w-md sm:rounded-2xl p-6 animate-slide-up">
+            <h2 className="text-title mb-6">Edit Bucket</h2>
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="edit-bucket-name" className="block text-small mb-2 text-dark-secondary">
+                  Bucket Name
+                </label>
+                <input
+                  id="edit-bucket-name"
+                  type="text"
+                  value={editBucketName}
+                  onChange={(e) => setEditBucketName(e.target.value)}
+                  className="input-field"
+                  placeholder="e.g., Weekend Trip"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-currency" className="block text-small mb-2 text-dark-secondary">
+                  Currency
+                </label>
+                <select
+                  id="edit-currency"
+                  value={editBucketCurrency}
+                  onChange={(e) => setEditBucketCurrency(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="JPY">JPY (¥)</option>
+                  <option value="CAD">CAD ($)</option>
+                  <option value="AUD">AUD ($)</option>
+                  <option value="INR">INR (₹)</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => {
+                    setShowEditBucketModal(false);
+                    setEditBucketName('');
+                    setEditBucketCurrency('');
+                  }}
+                  className="btn-secondary flex-1"
+                  disabled={savingBucket}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveBucket}
+                  className="btn-primary flex-1"
+                  disabled={savingBucket || !editBucketName.trim()}
+                >
+                  {savingBucket ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slide-up {
+          from {
+            transform: translateY(100%);
+          }
+          to {
+            transform: translateY(0);
+          }
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

@@ -4,9 +4,8 @@ export default function SplashScreen() {
       <img
         src="/splitthis-logo-splash.svg"
         alt="SplitThis"
-        className="w-32 h-32 mb-8"
+        className="w-32 h-32"
       />
-      <h1 className="text-display text-dark-text">splitthis</h1>
     </div>
   );
 }
