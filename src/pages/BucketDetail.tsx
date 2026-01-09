@@ -35,7 +35,8 @@ export default function BucketDetail() {
 
   // Scroll to top when bucket is first opened
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // Defer scroll to ensure page is fully rendered and interactive
+    setTimeout(() => window.scrollTo(0, 0), 0);
   }, [bucketId]);
 
   // Check for pending invitation and auto-accept when bucket is accessed
@@ -477,8 +478,8 @@ export default function BucketDetail() {
               await updateExpense(editingExpense.id, expense);
             } else {
               await createExpense({ ...expense, bucketId: bucket.id });
-              // Scroll to top when adding new expense
-              window.scrollTo(0, 0);
+              // Scroll to top when adding new expense (defer to avoid blocking interactions)
+              setTimeout(() => window.scrollTo(0, 0), 0);
             }
             setShowExpenseForm(false);
             setEditingExpense(null);
@@ -500,8 +501,8 @@ export default function BucketDetail() {
               await updateCredit(editingCredit.id, credit);
             } else {
               await createCredit({ ...credit, bucketId: bucket.id });
-              // Scroll to top when adding new credit
-              window.scrollTo(0, 0);
+              // Scroll to top when adding new credit (defer to avoid blocking interactions)
+              setTimeout(() => window.scrollTo(0, 0), 0);
             }
             setShowCreditForm(false);
             setEditingCredit(null);
