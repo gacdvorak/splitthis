@@ -184,7 +184,7 @@ export default function ExpenseForm({ bucket, expense, onClose, onSave }: Props)
                         max="100"
                         value={percentages[p.uid] || 0}
                         onChange={(e) => handlePercentageChange(p.uid, e.target.value)}
-                        className="w-20 bg-dark-surface border border-dark-border rounded px-2 py-1 text-sm"
+                        className="w-20 bg-dark-bg border border-dark-border rounded px-2 py-1 text-sm text-dark-text"
                       />
                       <span className="text-sm text-dark-muted">%</span>
                     </div>
