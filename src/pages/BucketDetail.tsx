@@ -412,7 +412,7 @@ export default function BucketDetail() {
                   {summary.settlements.map((settlement, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-4 bg-dark-bg rounded-xl"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 bg-dark-bg rounded-xl"
                     >
                       <div className="text-body">
                         <span className="text-strong">
@@ -447,19 +447,17 @@ export default function BucketDetail() {
           <div className="max-w-2xl mx-auto flex gap-3">
             <button
               onClick={() => setShowExpenseForm(true)}
-              className="btn-primary flex-1 flex items-center justify-center gap-2"
+              className="btn-primary flex-1"
               aria-label="Add expense"
             >
-              <span className="text-2xl leading-none">+</span>
-              <span>Add expense</span>
+              Add expense
             </button>
             <button
               onClick={() => setShowCreditForm(true)}
-              className="btn-secondary flex-1 flex items-center justify-center gap-2"
+              className="btn-secondary flex-1"
               aria-label="Add credit"
             >
-              <span className="text-2xl leading-none">+</span>
-              <span>Add credit</span>
+              Add credit
             </button>
           </div>
         </div>

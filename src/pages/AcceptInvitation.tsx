@@ -17,7 +17,6 @@ export default function AcceptInvitation() {
   // Form state for login/register
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
   const [isLogin, setIsLogin] = useState(true);
 
   // Load invitation data - only if user is authenticated
@@ -250,22 +249,6 @@ export default function AcceptInvitation() {
           )}
 
           <form onSubmit={handleAuth} className="space-y-4">
-            {!isLogin && (
-              <div>
-                <label htmlFor="displayName" className="block text-small mb-2 text-dark-secondary">
-                  Display Name
-                </label>
-                <input
-                  type="text"
-                  id="displayName"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="input-field"
-                  placeholder="Your name"
-                />
-              </div>
-            )}
-
             <div>
               <label htmlFor="email" className="block text-small mb-2 text-dark-secondary">
                 Email
