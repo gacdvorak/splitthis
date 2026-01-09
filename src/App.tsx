@@ -4,10 +4,20 @@ import Login from './pages/Login';
 import Buckets from './pages/Buckets';
 import BucketDetail from './pages/BucketDetail';
 import AcceptInvitation from './pages/AcceptInvitation';
+import VerifyEmail from './pages/VerifyEmail';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
-  return currentUser ? <>{children}</> : <Navigate to="/login" />;
+
+  if (!currentUser) {
+    return <Navigate to="/login" />;
+  }
+
+  if (!currentUser.emailVerified) {
+    return <Navigate to="/verify-email" />;
+  }
+
+  return <>{children}</>;
 }
 
 function AppRoutes() {
@@ -18,6 +28,10 @@ function AppRoutes() {
       <Route
         path="/login"
         element={currentUser ? <Navigate to="/" /> : <Login />}
+      />
+      <Route
+        path="/verify-email"
+        element={<VerifyEmail />}
       />
       <Route
         path="/invite/:token"

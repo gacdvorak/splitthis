@@ -21,10 +21,13 @@ export default function Login() {
     try {
       if (isRegistering) {
         await register(email, password);
+        // After registration, redirect to verify email page
+        navigate('/verify-email');
       } else {
         await login(email, password);
+        // After login, navigate to home (PrivateRoute will handle verification check)
+        navigate('/');
       }
-      navigate('/');
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
     } finally {

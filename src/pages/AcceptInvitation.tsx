@@ -7,12 +7,14 @@ import type { Invitation } from '../types';
 export default function AcceptInvitation() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const { currentUser, login, register } = useAuth();
+  const { currentUser, login, register, sendVerificationEmail, reloadUser } = useAuth();
 
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
   const [error, setError] = useState('');
+  const [verificationMessage, setVerificationMessage] = useState('');
+  const [needsVerification, setNeedsVerification] = useState(false);
 
   // Form state for login/register
   const [email, setEmail] = useState('');
@@ -36,6 +38,14 @@ export default function AcceptInvitation() {
       // Don't try to load invitation yet (Firestore rules require auth)
       if (!currentUser) {
         console.log('User not authenticated - showing login form');
+        setLoading(false);
+        return;
+      }
+
+      // Check if user's email is verified
+      if (!currentUser.emailVerified) {
+        console.log('User email not verified - showing verification prompt');
+        setNeedsVerification(true);
         setLoading(false);
         return;
       }
@@ -114,6 +124,38 @@ export default function AcceptInvitation() {
     }
   }
 
+  async function handleResendVerification() {
+    setError('');
+    setVerificationMessage('');
+
+    try {
+      await sendVerificationEmail();
+      setVerificationMessage('Verification email sent! Please check your inbox.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to send verification email');
+    }
+  }
+
+  async function handleCheckVerification() {
+    setError('');
+    setVerificationMessage('');
+
+    try {
+      await reloadUser();
+
+      if (currentUser?.emailVerified) {
+        setNeedsVerification(false);
+        setLoading(true);
+        // Reload the page to trigger invitation loading
+        window.location.reload();
+      } else {
+        setVerificationMessage('Email not verified yet. Please check your inbox and click the verification link.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to check verification status');
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -158,6 +200,57 @@ export default function AcceptInvitation() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto"></div>
           <p className="mt-4 text-dark-secondary text-body">Accepting invitation...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If user needs to verify their email
+  if (needsVerification && currentUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <div className="text-center mb-8">
+            <img src="/splitthis-logo.svg" alt="SplitThis" className="h-12 mx-auto mb-4" />
+          </div>
+          <div className="card">
+            <h2 className="text-display mb-4">Verify Your Email</h2>
+            <p className="text-body text-dark-secondary mb-2">
+              Before you can accept this invitation, you need to verify your email address.
+            </p>
+            <p className="text-body text-dark-secondary mb-6">
+              We've sent a verification email to <strong>{currentUser.email}</strong>.
+              Please check your inbox and click the verification link.
+            </p>
+
+            {verificationMessage && (
+              <div className="bg-brand-primary/20 border border-brand-primary text-dark-primary px-4 py-3 rounded-xl mb-4">
+                {verificationMessage}
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-destructive/20 border border-destructive text-destructive px-4 py-3 rounded-xl mb-4">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <button
+                onClick={handleCheckVerification}
+                className="btn-primary w-full"
+              >
+                I've Verified My Email
+              </button>
+
+              <button
+                onClick={handleResendVerification}
+                className="btn-secondary w-full"
+              >
+                Resend Verification Email
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );

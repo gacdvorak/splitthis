@@ -6,6 +6,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  sendEmailVerification,
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import SplashScreen from '../components/SplashScreen';
@@ -16,6 +17,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  sendVerificationEmail: () => Promise<void>;
+  reloadUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,11 +40,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function register(email: string, password: string) {
-    await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    // Send verification email immediately after registration
+    await sendEmailVerification(userCredential.user, {
+      url: window.location.origin + '/',
+      handleCodeInApp: false,
+    });
   }
 
   async function logout() {
     await signOut(auth);
+  }
+
+  async function sendVerificationEmail() {
+    if (auth.currentUser) {
+      await sendEmailVerification(auth.currentUser, {
+        url: window.location.origin + '/',
+        handleCodeInApp: false,
+      });
+    }
+  }
+
+  async function reloadUser() {
+    if (auth.currentUser) {
+      await auth.currentUser.reload();
+      setCurrentUser({ ...auth.currentUser });
+    }
   }
 
   useEffect(() => {
@@ -59,6 +83,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     register,
     logout,
+    sendVerificationEmail,
+    reloadUser,
   };
 
   return (
