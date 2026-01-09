@@ -218,10 +218,17 @@ export default function AcceptInvitation() {
             <p className="text-body text-dark-secondary mb-2">
               Before you can accept this invitation, you need to verify your email address.
             </p>
-            <p className="text-body text-dark-secondary mb-6">
+            <p className="text-body text-dark-secondary mb-2">
               We've sent a verification email to <strong>{currentUser.email}</strong>.
               Please check your inbox and click the verification link.
             </p>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 mb-6">
+              <p className="text-small text-yellow-800">
+                <strong>📬 Can't find the email?</strong> Check your spam or junk folder.
+                Verification emails sometimes get filtered there.
+              </p>
+            </div>
 
             {verificationMessage && (
               <div className="bg-brand-primary/20 border border-brand-primary text-dark-primary px-4 py-3 rounded-xl mb-4">
