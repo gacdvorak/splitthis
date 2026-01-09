@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useBuckets } from '../hooks/useBuckets';
 import { useExpenses } from '../hooks/useExpenses';
@@ -30,8 +30,6 @@ export default function BucketDetail() {
   const [editBucketName, setEditBucketName] = useState('');
   const [editBucketCurrency, setEditBucketCurrency] = useState('');
   const [savingBucket, setSavingBucket] = useState(false);
-
-  const contentRef = useRef<HTMLDivElement>(null);
 
   const bucket = buckets.find((b) => b.id === bucketId);
 
